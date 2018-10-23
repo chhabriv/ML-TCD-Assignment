@@ -13,6 +13,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression  
 from sklearn import metrics
 from sklearn.preprocessing import LabelEncoder
+from matplotlib import pyplot as plt
 
 #Loading the dataset using pandas
 data = pd.read_csv('../../dataset/imdb_1000.csv')
@@ -33,6 +34,21 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 regressor = LinearRegression()  
 #Train the model with the input data available
 regressor.fit(X_train, y_train)
+#plotting the regressor with training dataset
+plt.scatter(X_train, y_train,color='g')
+plt.plot(X_train, regressor.predict(X_train),color='k')
+plt.title('Rating vs Duration (Training set)')
+plt.xlabel('Duration')
+plt.ylabel('Rating')
+plt.show()
+#plotting the regressor with test dataset
+plt.scatter(X_test, y_test,color='g')
+plt.plot(X_train, regressor.predict(X_train),color='k')
+plt.title('Rating vs Duration (Training set)')
+plt.xlabel('Duration')
+plt.ylabel('Rating')
+plt.show()
+
 #printing various features of the model to know the quality of the model
 print(regressor.intercept_)
 print(regressor.coef_)

@@ -10,7 +10,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns 
-from scipy import stats
+from sklearn import metrics
+from sklearn.metrics import accuracy_score
+
 
 # Importing the dataset
 dataset = pd.read_csv('movie_metadata.csv')
@@ -49,6 +51,60 @@ plt.figure(figsize=(18,8),dpi=100,)
 plt.subplots(figsize=(18,8))
 sns.heatmap(data=dataset.corr(),square=True,vmax=0.8,annot=True)
 
+datasetEdit=dataset
+
+#encode categorical values
+from sklearn.preprocessing import LabelEncoder,OneHotEncoder
+encode=LabelEncoder()
+datasetEdit['director_name'] = encode.fit_transform(datasetEdit['director_name'] ) 
+datasetEdit['language'] = encode.fit_transform(datasetEdit['language'] ) 
+datasetEdit['country'] = encode.fit_transform(datasetEdit['country'] ) 
+datasetEdit['content_rating'] = encode.fit_transform(datasetEdit['content_rating'] ) 
+
+datasetEdit['verdict']=pd.cut(datasetEdit['imdb_score'],bins=[0,7,8,8.5,9,10],labels=["poor","average","good","very good","excellent"],right=False)
+datasetEdit['verdict'] = encode.fit_transform(datasetEdit['verdict'] ) 
+
 #Setting predictors and target variables
-X = dataset.iloc[:, 1:2].values
-y = dataset.iloc[:, 2].values
+X = datasetEdit.iloc[:, np.r_[0:12,13]].values
+y = datasetEdit.iloc[:, 14].values
+
+#split categorical labeled data into columns
+onehotencoder=OneHotEncoder(categorical_features= [0])
+X=onehotencoder.fit_transform(X).toarray()
+
+#Split to train and test
+from sklearn.model_selection import train_test_split
+X_train,X_test,y_train,y_test=train_test_split(X,y,test_size=0.2,random_state=19)
+
+# ============================================================================= 
+# # # Fitting Random Forest Regression to the dataset
+# from sklearn.linear_model import LinearRegression
+# regressor = LinearRegression()
+# regressor.fit(X_train, y_train)
+# 
+# print('RMSE:')
+# print(np.sqrt(metrics.mean_squared_error(y_test, regressor.predict(X_test))))
+# print ('')
+# =============================================================================
+
+"""
+# Fitting Random Forest Regression to the dataset
+from sklearn.ensemble import RandomForestRegressor
+regressor = RandomForestRegressor(n_estimators = 10, random_state = 0)
+regressor.fit(X_train, y_train)
+ 
+#prediction
+predict=regressor.predict(X_test)
+print('Regressor Score',regressor.score(X_test,y_test))
+
+print('RMSE:')
+print(np.sqrt(metrics.mean_squared_error(y_test, regressor.predict(X_test))))
+print ('')
+"""
+from sklearn.ensemble import RandomForestClassifier
+regressor = RandomForestClassifier(n_estimators = 10, random_state = 0)
+regressor.fit(X_train, y_train)
+ 
+#prediction
+predict=regressor.predict(X_test)
+print("Accuracy",accuracy_score(y_test,predict)*100)

@@ -26,10 +26,11 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 from matplotlib import pyplot as plt
-from sklearn.preprocessing import OneHotEncoder,LabelEncoder
+from sklearn.preprocessing import OneHotEncoder,LabelEncoder,StandardScaler
 import seaborn as sns 
 import os as os
 from sklearn.metrics import confusion_matrix,accuracy_score
+from itertools import cycle
 
 print(os.getcwd())
 dataset = pd.read_csv('../../dataset/movie_metadata.csv')
@@ -39,7 +40,7 @@ dataset.info()
 #droping the columns which is not necessary
 dataset.drop(["color","actor_1_facebook_likes","actor_3_facebook_likes",
            "genres","actor_1_name","actor_2_name","movie_title","actor_3_name","facenumber_in_poster",
-           "plot_keywords","title_year","movie_imdb_link","actor_2_facebook_likes","aspect_ratio"],axis=1,inplace=True)
+           "plot_keywords","title_year","movie_imdb_link","actor_2_facebook_likes","aspect_ratio","country","language"],axis=1,inplace=True)
 
 dataset.isna().sum()
 dataset.info()
@@ -75,33 +76,54 @@ lb_language = LabelEncoder()
 lb_content_rating = LabelEncoder()
 lb_verdict = LabelEncoder()
 dataset["director_code"] = lb_director.fit_transform(dataset["director_name"])
-dataset["country_code"] = lb_country.fit_transform(dataset["country"])
-dataset["lang_code"] = lb_language.fit_transform(dataset["language"])
+#dataset["country_code"] = lb_country.fit_transform(dataset["country"])
+#dataset["lang_code"] = lb_language.fit_transform(dataset["language"])
 dataset["content_rating_code"] = lb_content_rating.fit_transform(dataset["content_rating"])
 
 dataset['verdict']=pd.cut(dataset['imdb_score'],bins=[0,7,8,8.5,9,10],labels=["poor","average","good","very good","excellent"],right=False)
 dataset['verdict'] = lb_verdict.fit_transform(dataset['verdict'] ) 
-
+#dataset['country'].value_counts().plot(kind='bar')
+#dataset[dataset['imdb_score']]
+dataset.hist(column='imdb_score')
 dataset.info()
-#dataset.to_csv('processed_df.csv')
-#Setting predictors and target variables
-X = dataset.iloc[:, np.r_[1:7,11,13:17]].values
-X
-y = dataset.iloc[:, 18].values
-y
-enc = OneHotEncoder(categorical_features=[0])
-X = enc.fit_transform(X).toarray()
-X
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+sc = StandardScaler()
+lst = []
+for prune in range(1,11):
+    datasetPruned=dataset.drop(dataset[(dataset['num_critic_for_reviews']<prune)].index).reset_index(drop=True)
+    #datasetPruned.info()
+    #dataset.to_csv('processed_df.csv')
+    #Setting predictors and target variables
+    X = datasetPruned.iloc[:, np.r_[1:7,9:13]].values
+    #X
+    y = datasetPruned.iloc[:, 14].values
+    #y
+    enc = OneHotEncoder(categorical_features=[0])
+    X = enc.fit_transform(X).toarray()
+    #X
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+    X_train = sc.fit_transform(X_train)
+    X_test = sc.transform(X_test)
+    for num in range(1,11):
+        neigh = KNeighborsClassifier(n_neighbors=num)
+        #print(neigh.get_params())
+        neigh.fit(X_train, y_train) 
+        y_pred=neigh.predict(X_test)
+        
+        neigh.predict_proba(X_test)
+        
+        #conf_matrix=confusion_matrix(y_test,y_pred)
+        #print('The confusion matrxi for number of neighbours = ',num,", is: ", conf_matrix)
+        acc_score = accuracy_score(y_test,y_pred)*100
+        lst.append([prune,num,accuracy_score(y_test,y_pred)*100])
+        print("Accuracy for prune = ",prune," and number of neighbours = ",num, ", is: ",acc_score)
 
-for num in range(1,100):
-    neigh = KNeighborsClassifier(n_neighbors=num)
-    neigh.fit(X_train, y_train) 
-    y_pred=neigh.predict(X_test)
-    
-    neigh.predict_proba(X_test)
-    
-    #conf_matrix=confusion_matrix(y_test,y_pred)
-    #print('The confusion matrxi for number of neighbours = ',num,", is: ", conf_matrix)
-    
-    print("Accuracy for number of neighbours = ",num, ", is: ",accuracy_score(y_test,y_pred)*100)
+res = pd.DataFrame(lst,columns=('prune', 'neighbours', 'accuracy'))
+res.head()
+cycol = cycle('bgrcmk')
+res.[1]
+plt.plot(res.iloc[:,1],res.iloc[:,])
+
+
+    plt.show()
+
+#res.plot()

@@ -23,6 +23,8 @@ from sklearn.preprocessing import OneHotEncoder,LabelEncoder
 import seaborn as sns 
 import os as os
 from sklearn.metrics import log_loss, confusion_matrix,accuracy_score
+from sklearn.svm import SVC
+from sklearn.model_selection import cross_val_score
 
 print(os.getcwd())
 dataset = pd.read_csv('../../dataset/movie_metadata.csv')
@@ -76,6 +78,7 @@ dataset['verdict']=pd.cut(dataset['imdb_score'],bins=[0,7,8,8.5,9,10],labels=["p
 dataset['verdict'] = lb_verdict.fit_transform(dataset['verdict'] ) 
 
 dataset.info()
+dataset.to_csv('processed_df.csv')
 #Setting predictors and target variables
 X = dataset.iloc[:, np.r_[1:7,11,13:17]].values
 X
@@ -85,14 +88,20 @@ enc = OneHotEncoder(categorical_features=[0])
 X = enc.fit_transform(X).toarray()
 X
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+C_param_range = [0.001,0.01,0.1,1,10,100,1000]
+for i in C_param_range:
+    logistic = LogisticRegression(C=i)
+    logistic.fit(X_train,y_train)
+    y_pred=logistic.predict(X_test)
+    
+    logistic.predict_proba(X_test)
 
-logistic = LogisticRegression()
-logistic.fit(X_train,y_train)
-y_pred=logistic.predict(X_test)
-
-logistic.predict_proba(X_test)
-
-conf_matrix=confusion_matrix(y_test,y_pred)
-print('The confusion matrxi: ', conf_matrix)
-
-print("Accuracy",accuracy_score(y_test,y_pred)*100)
+    conf_matrix=confusion_matrix(y_test,y_pred)
+    print('The confusion matrxi: ', conf_matrix)
+    
+    print("Accuracy",accuracy_score(y_test,y_pred)*100)
+    
+logistic = LogisticRegression(C=10)
+scores = cross_val_score(logistic,X,y,cv=5)
+scores
+print("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))

@@ -64,47 +64,67 @@ datasetEdit['content_rating'] = encode.fit_transform(datasetEdit['content_rating
 datasetEdit['verdict']=pd.cut(datasetEdit['imdb_score'],bins=[0,7,8,8.5,9,10],labels=["poor","average","good","very good","excellent"],right=False)
 datasetEdit['verdict'] = encode.fit_transform(datasetEdit['verdict'] ) 
 
-#Setting predictors and target variables
-X = datasetEdit.iloc[:, np.r_[0:12,13]].values
-y = datasetEdit.iloc[:, 14].values
+#incrementally prune
+for prune in range(1,11):
 
-#split categorical labeled data into columns
-onehotencoder=OneHotEncoder(categorical_features= [0])
-X=onehotencoder.fit_transform(X).toarray()
-
-#Split to train and test
-from sklearn.model_selection import train_test_split
-X_train,X_test,y_train,y_test=train_test_split(X,y,test_size=0.2,random_state=19)
-
-# ============================================================================= 
-# # # Fitting Random Forest Regression to the dataset
-# from sklearn.linear_model import LinearRegression
-# regressor = LinearRegression()
-# regressor.fit(X_train, y_train)
-# 
-# print('RMSE:')
-# print(np.sqrt(metrics.mean_squared_error(y_test, regressor.predict(X_test))))
-# print ('')
-# =============================================================================
-
-"""
-# Fitting Random Forest Regression to the dataset
-from sklearn.ensemble import RandomForestRegressor
-regressor = RandomForestRegressor(n_estimators = 10, random_state = 0)
-regressor.fit(X_train, y_train)
- 
-#prediction
-predict=regressor.predict(X_test)
-print('Regressor Score',regressor.score(X_test,y_test))
-
-print('RMSE:')
-print(np.sqrt(metrics.mean_squared_error(y_test, regressor.predict(X_test))))
-print ('')
-"""
-from sklearn.ensemble import RandomForestClassifier
-regressor = RandomForestClassifier(n_estimators = 10, random_state = 0)
-regressor.fit(X_train, y_train)
- 
-#prediction
-predict=regressor.predict(X_test)
-print("Accuracy",accuracy_score(y_test,predict)*100)
+    #Pruning based on review count < 10
+    datasetEdit=datasetEdit.drop(datasetEdit[(datasetEdit['num_user_for_reviews']<prune)].index).reset_index(drop=True)
+    datasetEdit.info()
+    
+    #Setting predictors and target variables
+    X = datasetEdit.iloc[:, np.r_[0:12,13]].values
+    y = datasetEdit.iloc[:, 14].values
+    
+    #split categorical labeled data into columns
+    onehotencoder=OneHotEncoder(categorical_features= [0])
+    X=onehotencoder.fit_transform(X).toarray()
+    
+    #Split to train and test
+    from sklearn.model_selection import train_test_split
+    X_train,X_test,y_train,y_test=train_test_split(X,y,test_size=0.2,random_state=19)
+    
+    # ============================================================================= 
+    # # # Fitting Random Forest Regression to the dataset
+    # from sklearn.linear_model import LinearRegression
+    # regressor = LinearRegression()
+    # regressor.fit(X_train, y_train)
+    # 
+    # print('RMSE:')
+    # print(np.sqrt(metrics.mean_squared_error(y_test, regressor.predict(X_test))))
+    # print ('')
+    # =============================================================================
+    
+    """
+    # Fitting Random Forest Regression to the dataset
+    from sklearn.ensemble import RandomForestRegressor
+    regressor = RandomForestRegressor(n_estimators = 10, random_state = 0)
+    regressor.fit(X_train, y_train)
+     
+    #prediction
+    predict=regressor.predict(X_test)
+    print('Regressor Score',regressor.score(X_test,y_test))
+    
+    print('RMSE:')
+    print(np.sqrt(metrics.mean_squared_error(y_test, regressor.predict(X_test))))
+    print ('')
+    """
+    from sklearn.ensemble import RandomForestClassifier
+    regressor = RandomForestClassifier(n_estimators = 10, random_state = 0)
+    regressor.fit(X_train, y_train)
+     
+    #prediction
+    predict=regressor.predict(X_test)
+    print("Accuracy Random Forest",accuracy_score(y_test,predict)*100)
+    
+    from sklearn.linear_model import LogisticRegression  
+    logistic = LogisticRegression()
+    logistic.fit(X_train,y_train)
+    y_pred=logistic.predict(X_test)
+    print("Accuracy Logistic",accuracy_score(y_test,y_pred)*100)
+    
+    
+    from sklearn.svm import SVC 
+    svc = SVC()
+    svc.fit(X_train,y_train)
+    y_pred1=svc.predict(X_test)
+    print("Accuracy svc",accuracy_score(y_test,y_pred1)*100)

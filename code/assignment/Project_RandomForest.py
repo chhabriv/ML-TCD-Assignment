@@ -22,14 +22,14 @@ dataset.info()
 #droping the columns which is not necessary
 dataset.drop(["color","actor_1_facebook_likes","actor_3_facebook_likes",
            "genres","actor_1_name","actor_2_name","movie_title","actor_3_name","facenumber_in_poster",
-           "plot_keywords","title_year","movie_imdb_link","actor_2_facebook_likes","aspect_ratio","country","language","director_name"],axis=1,inplace=True)
+           "plot_keywords","title_year","movie_imdb_link","actor_2_facebook_likes","aspect_ratio","country","language"],axis=1,inplace=True)
 
 dataset.isna().sum()
 dataset.info()
 
 #Data imputation
 dataset.replace({"country":np.NaN,
-                 #"director_name":np.NaN,
+                 "director_name":np.NaN,
               "language":np.NaN,
              "content_rating":np.NaN},value="Missing",inplace=True)
 
@@ -43,9 +43,6 @@ dataset['num_critic_for_reviews']=dataset['num_critic_for_reviews'].fillna(value
 #remove duplicates
 dataset.drop_duplicates(subset=None, keep='first',inplace=True)
 
-dataset.isna().sum()
-dataset.info()
-
 #plotting heat map to visualize correlation:
 plt.figure(figsize=(18,8),dpi=100,)
 plt.subplots(figsize=(18,8))
@@ -56,7 +53,7 @@ datasetEdit=dataset
 #encode categorical values
 from sklearn.preprocessing import LabelEncoder,OneHotEncoder
 encode=LabelEncoder()
-#datasetEdit['director_name'] = encode.fit_transform(datasetEdit['director_name'] ) 
+datasetEdit['director_name'] = encode.fit_transform(datasetEdit['director_name'] ) 
 #datasetEdit['language'] = encode.fit_transform(datasetEdit['language'] ) 
 #datasetEdit['country'] = encode.fit_transform(datasetEdit['country'] ) 
 datasetEdit['content_rating'] = encode.fit_transform(datasetEdit['content_rating'] ) 
@@ -67,12 +64,16 @@ datasetEdit['verdict'].value_counts() # Distribution of classes after split
 datasetEdit['verdict'] = encode.fit_transform(datasetEdit['verdict'] ) 
 
 #results=pd.DataFrame(columns=["Random Forest Train","Random Forest Validate","Random Forest Test","Logistic Train","Logistic Validate","Logistic Test","SVC Train","SVC Validate","SVC Test"])
-results=pd.DataFrame(columns=["Random Forest Accuracy","Random Forest Precision","Random Forest F1 Score",
-                              "Logistic Accuracy","Logistic Precision","Logistic F1 Score",
-                              "SVC Accuracy","SVC Precision","SVC F1 Score"]) #Dataframe for each result
+results=pd.DataFrame(columns=["Random Forest Accuracy","Random Forest Precision","Random Forest Recall","Random Forest F1 Score",
+                              "Logistic Accuracy","Logistic Precision","Logistic Recall","Logistic F1 Score",
+                              "SVC Accuracy","SVC Precision","SVC Recall","SVC F1 Score"]) #Dataframe for each result
 
 prePruneCount=datasetEdit.shape[0]
 print('Dataset size before pruning: ',prePruneCount)
+datasetEdit['num_user_for_reviews'].describe()
+
+X = datasetEdit.iloc[:, np.r_[0:9,10]].values
+y = datasetEdit.iloc[:, -1].values
 #incrementally prune
 for prune in range(1,21):
     
@@ -80,10 +81,10 @@ for prune in range(1,21):
     
     #Pruning based on review count < 10
     datasetEdit=datasetEdit.drop(datasetEdit[(datasetEdit['num_user_for_reviews']<prune)].index).reset_index(drop=True)
-    datasetEdit.info()
+    #datasetEdit.info()
     
     #Setting predictors and target variables
-    X = datasetEdit.iloc[:, np.r_[0:9,10]].values
+    X = datasetEdit.iloc[:, np.r_[0:10,11]].values
     y = datasetEdit.iloc[:, -1].values
     
     #split categorical labeled data into columns
@@ -135,9 +136,10 @@ for prune in range(1,21):
     predict_test_R=regressor.predict(X_test)
     #resultList.append(accuracy_score(y_train,predict_train_R)*100)
     #resultList.append(accuracy_score(y_validate,predict_val_R)*100)
-    resultList.append(accuracy_score(y_test,predict_test_R)*100)
-    resultList.append(metrics.precision_score(y_test,predict_test_R,average='weighted')*100)
-    resultList.append(metrics.f1_score(y_test,predict_test_R,average='weighted')*100)
+    resultList.append(round(accuracy_score(y_test,predict_test_R)*100,2))
+    resultList.append(round(metrics.precision_score(y_test,predict_test_R,average='weighted'),2))
+    resultList.append(round(metrics.recall_score(y_test,predict_test_R,average='weighted'),2))
+    resultList.append(round(metrics.f1_score(y_test,predict_test_R,average='weighted'),2))
     
     from sklearn.linear_model import LogisticRegression  
     logistic = LogisticRegression()
@@ -147,9 +149,10 @@ for prune in range(1,21):
     predict_test_L=logistic.predict(X_test)
     #resultList.append(accuracy_score(y_train,predict_train_L)*100)
     #resultList.append(accuracy_score(y_validate,predict_val_L)*100)
-    resultList.append(accuracy_score(y_test,predict_test_L)*100)
-    resultList.append(metrics.precision_score(y_test,predict_test_L,average='weighted')*100)
-    resultList.append(metrics.f1_score(y_test,predict_test_L,average='weighted')*100)
+    resultList.append(round(accuracy_score(y_test,predict_test_L)*100,2))
+    resultList.append(round(metrics.precision_score(y_test,predict_test_L,average='weighted'),2))
+    resultList.append(round(metrics.recall_score(y_test,predict_test_L,average='weighted'),2))
+    resultList.append(round(metrics.f1_score(y_test,predict_test_L,average='weighted'),2))
 
     from sklearn.svm import SVC 
     svc = SVC()
@@ -159,14 +162,15 @@ for prune in range(1,21):
     predict_test_S=svc.predict(X_test)
     #resultList.append(accuracy_score(y_train,predict_train_S)*100)
     #resultList.append(accuracy_score(y_validate,predict_val_S)*100)
-    resultList.append(accuracy_score(y_test,predict_test_S)*100)
-    resultList.append(metrics.precision_score(y_test,predict_test_S,average='weighted')*100)
-    resultList.append(metrics.f1_score(y_test,predict_test_S,average='weighted')*100)
+    resultList.append(round(accuracy_score(y_test,predict_test_S)*100,2))
+    resultList.append(round(metrics.precision_score(y_test,predict_test_S,average='weighted'),2))
+    resultList.append(round(metrics.recall_score(y_test,predict_test_L,average='weighted'),2))
+    resultList.append(round(metrics.f1_score(y_test,predict_test_S,average='weighted'),2))
 
     #results=results.append(pd.Series(resultList,index=["Random Forest Train","Random Forest Validate","Random Forest Test","Logistic Train","Logistic Validate","Logistic Test","SVC Train","SVC Validate","SVC Test"]),ignore_index=True)
-    results=results.append(pd.Series(resultList,index=["Random Forest Accuracy","Random Forest Precision","Random Forest F1 Score",
-                                                       "Logistic Accuracy","Logistic Precision","Logistic F1 Score",
-                                                       "SVC Accuracy","SVC Precision","SVC F1 Score"]),ignore_index=True)
+    results=results.append(pd.Series(resultList,index=["Random Forest Accuracy","Random Forest Precision","Random Forest Recall","Random Forest F1 Score",
+                                                       "Logistic Accuracy","Logistic Precision","Logistic Recall","Logistic F1 Score",
+                                                       "SVC Accuracy","SVC Precision","SVC Recall","SVC F1 Score"]),ignore_index=True)
     
 results.to_csv("Accuracy.csv")
 print(results)

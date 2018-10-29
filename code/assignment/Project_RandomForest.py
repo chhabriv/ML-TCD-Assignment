@@ -37,8 +37,8 @@ dataset['duration']=dataset['duration'].fillna(value=dataset['duration'].mean())
 dataset['num_user_for_reviews']=dataset['num_user_for_reviews'].fillna(value=dataset['num_user_for_reviews'].mean())
 dataset['budget']=dataset['budget'].fillna(value=dataset['budget'].mean())
 dataset['gross']=dataset['gross'].fillna(value=dataset['gross'].mean())
-dataset['director_facebook_likes']=dataset['director_facebook_likes'].fillna(value=0)
-dataset['num_critic_for_reviews']=dataset['num_critic_for_reviews'].fillna(value=0)
+dataset['director_facebook_likes']=dataset['director_facebook_likes'].fillna(value=dataset['director_facebook_likes'].mean())
+dataset['num_critic_for_reviews']=dataset['num_critic_for_reviews'].fillna(value=dataset['num_critic_for_reviews'].mean())
 
 #remove duplicates
 dataset.drop_duplicates(subset=None, keep='first',inplace=True)
@@ -70,10 +70,7 @@ results=pd.DataFrame(columns=["Random Forest Accuracy","Random Forest Precision"
 
 prePruneCount=datasetEdit.shape[0]
 print('Dataset size before pruning: ',prePruneCount)
-datasetEdit['num_user_for_reviews'].describe()
 
-X = datasetEdit.iloc[:, np.r_[0:9,10]].values
-y = datasetEdit.iloc[:, -1].values
 #incrementally prune
 for prune in range(1,21):
     
@@ -96,7 +93,7 @@ for prune in range(1,21):
     X_train,X_test,y_train,y_test=train_test_split(X,y,test_size=0.2,random_state=19)
     #X_train,X_validate,y_train,y_validate=train_test_split(X_train,y_train,test_size=0.15,random_state=19)
     
-    #Normalising the features
+    #Standardize the features
     scaler=StandardScaler()
     X_train=scaler.fit_transform(X_train)
     X_test=scaler.transform(X_test)
@@ -127,7 +124,7 @@ for prune in range(1,21):
     print ('')
     """
     from sklearn.ensemble import RandomForestClassifier
-    regressor = RandomForestClassifier(n_estimators = 10, random_state = 19)
+    regressor = RandomForestClassifier(n_estimators = 40, random_state = 19)
     regressor.fit(X_train, y_train)
      
     #prediction

@@ -2,14 +2,14 @@
 """
 Created on Thu Nov 29 23:46:09 2018
 
-@author: Debrup
+@author: Aneek,Debrup,Viren
 """
 
 # -*- coding: utf-8 -*-
 """
 Spyder Editor
 
-This is a temporary script file.
+This is a sample script file for performing k-fold cross validation for hyper-parameter tuning.
 """
 # Importing the libraries
 import numpy as np
@@ -20,6 +20,7 @@ from sklearn.preprocessing import OneHotEncoder,LabelEncoder,StandardScaler
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
 from sklearn.model_selection import train_test_split
+from sklearn.pipeline import make_pipeline
 
 def preprocess():
     # Importing the dataset
@@ -54,18 +55,10 @@ def preprocess():
     dataset.isna().sum()
     dataset.info()
     
-    #plotting heat map to visualize correlation:
-    #plt.figure(figsize=(18,8),dpi=100,)
-    #plt.subplots(figsize=(18,8))
-    #sns.heatmap(data=dataset.corr(),square=True,vmax=0.8,annot=True)
-    
     datasetEdit=dataset
     
     #encode categorical values
     encode=LabelEncoder()
-    #datasetEdit['director_name'] = encode.fit_transform(datasetEdit['director_name'] ) 
-    #datasetEdit['language'] = encode.fit_transform(datasetEdit['language'] ) 
-    #datasetEdit['country'] = encode.fit_transform(datasetEdit['country'] ) 
     datasetEdit['content_rating'] = encode.fit_transform(datasetEdit['content_rating'] ) 
     
     #creating labels based on IMDB score
@@ -73,14 +66,9 @@ def preprocess():
     datasetEdit['verdict'].value_counts() # Distribution of classes after split
     datasetEdit['verdict'] = encode.fit_transform(datasetEdit['verdict'] ) 
     
-    #results=pd.DataFrame(columns=["Random Forest Train","Random Forest Validate","Random Forest Test","Logistic Train","Logistic Validate","Logistic Test","SVC Train","SVC Validate","SVC Test"])
-    results=pd.DataFrame(columns=["Random Forest Accuracy","Random Forest Precision","Random Forest F1 Score",
-                                  "Logistic Accuracy","Logistic Precision","Logistic F1 Score",
-                                  "SVC Accuracy","SVC Precision","SVC F1 Score"]) #Dataframe for each result
-    
     prePruneCount=datasetEdit.shape[0]
     print('Dataset size before pruning: ',prePruneCount)
-    return datasetEdit,results
+    return datasetEdit
 
 svc_scores = []
 
@@ -96,8 +84,6 @@ def doSVMClassification(X_train,y_train,X_test,y_test):
     print('Length of list', len(svc_scores))
     print('Max of list', max(svc_scores))
 
-# plot the value of K for KNN (x-axis) versus the cross-validated accuracy (y-axis)
-# plt.plot(x_axis, y_axis)
     plt.plot(C_param_range, svc_scores)
     plt.xlabel('Value of C for SVC')
     plt.ylabel('Cross-validated accuracy')
@@ -117,15 +103,13 @@ def doRFClassification(X_train,y_train,X_test,y_test):
     print('Length of list', len(rf_scores))
     print('Max of list', max(rf_scores))
 
-# plot the value of K for KNN (x-axis) versus the cross-validated accuracy (y-axis)
-# plt.plot(x_axis, y_axis)
     plt.plot(rf_range, rf_scores)
     plt.xlabel('Value of n_estimator for RF')
     plt.ylabel('Cross-validated accuracy')
 
 
 def main():
-    datasetEdit,results = preprocess()
+    datasetEdit = preprocess()
     
     #Setting predictors and target variables
     X = datasetEdit.iloc[:, np.r_[0:9,10]].values

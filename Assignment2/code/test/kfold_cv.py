@@ -89,7 +89,7 @@ def doSVMClassification(X_train,y_train,X_test,y_test):
     plt.ylabel('Cross-validated accuracy')
 
 
-rf_scores =[]
+rf_mean_scores =[]
 
 def doRFClassification(X_train,y_train,X_test,y_test):
     print('Now doing RF cross validation')
@@ -97,17 +97,38 @@ def doRFClassification(X_train,y_train,X_test,y_test):
     for i in rf_range:
         rf = RandomForestClassifier(n_estimators = i, random_state = 19)
         scores = cross_val_score(rf, X_train, y_train, cv=5, scoring='accuracy')
-        rf_scores.append(scores.mean())
+        print('scores --> ',scores)
+        rf_mean_scores.append(scores.mean())
         
-    print(rf_scores)
-    print('Length of list', len(rf_scores))
-    print('Max of list', max(rf_scores))
+    print(rf_mean_scores)
+    print('Length of list', len(rf_mean_scores))
+    print('Max of list', max(rf_mean_scores))
 
-    plt.plot(rf_range, rf_scores)
+    plt.plot(rf_range, rf_mean_scores)
     plt.xlabel('Value of n_estimator for RF')
     plt.ylabel('Cross-validated accuracy')
 
+def selectImportantFeatures(X_train,y_train):
+    tree_classifier = RandomForestClassifier(n_estimators=100,random_state=0)
+    tree_classifier.fit(X_train,y_train)
+    importances = tree_classifier.feature_importances_
+    std = np.std([tree.feature_importances_ for tree in tree_classifier.estimators_],
+             axis=0)
+    indices = importances.argsort()[::-1][:10] #top 10 features in descending order
+    print(indices)
+    print("Feature ranking:")
 
+    for f in range(indices.size):
+        print("%d. feature %d (%f)" % (f + 1, indices[f], importances[indices[f]]))
+    
+    plt.figure()
+    plt.title("Feature importances")
+    plt.bar(range(indices.size), importances[indices],
+           color="r",yerr=std[indices], align="center")
+    plt.xticks(range(indices.size), indices)
+    plt.xlim([-1, indices.size])
+    plt.show()
+    
 def main():
     datasetEdit = preprocess()
     
@@ -128,7 +149,9 @@ def main():
     scaler=StandardScaler()
     X_train=scaler.fit_transform(X_train)
     X_test=scaler.transform(X_test)
-    doRFClassification(X_train,y_train,X_test,y_test)
+    selectImportantFeatures(X_train,y_train)
+    #doRFClassification(X_train,y_train,X_test,y_test)
+    #doSVMClassification(X_train,y_train,X_test,y_test)
         
 
 if __name__== "__main__":

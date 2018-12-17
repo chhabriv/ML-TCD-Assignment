@@ -1,0 +1,29 @@
+Link: https://www.kaggle.com/lava18/google-play-store-apps#googleplaystore.csv
+Short Description: 10.8k rows, 13 features
+Context
+While many public datasets (on Kaggle and the like) provide Apple App Store data, there are not many counterpart datasets available for Google Play Store apps anywhere on the web. On digging deeper, I found out that iTunes App Store page deploys a nicely indexed appendix-like structure to allow for simple and easy web scraping. On the other hand, Google Play Store uses sophisticated modern-day techniques (like dynamic page load) using JQuery making scraping more challenging.
+
+Content
+Each app (row) has values for catergory, rating, size, and more.
+
+Acknowledgements
+This information is scraped from the Google Play Store. This app information would not be available without it.
+
+Inspiration
+The Play Store apps data has enormous potential to drive app-making businesses to success. Actionable insights can be drawn for developers to work on and capture the Android market!
+
+Columns
+
+AppApplication name
+CategoryCategory the app belongs to
+RatingOverall user rating of the app (as when scraped)
+ReviewsNumber of user reviews for the app (as when scraped)
+SizeSize of the app (as when scraped)
+InstallsNumber of user downloads/installs for the app (as when scraped)
+TypePaid or Free
+PricePrice of the app (as when scraped)
+Content RatingAge group the app is targeted at - Children / Mature 21+ / Adult
+GenresAn app can belong to multiple genres (apart from its main category). For eg, a musical family game will belong to Music, Game, Family genres.
+Last UpdatedDate when the app was last updated on Play Store (as when scraped)
+Current VerCurrent version of the app available on Play Store (as when scraped)
+Android VerMin required Android version (as when scraped)

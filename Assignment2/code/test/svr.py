@@ -54,12 +54,12 @@ rf_std_scores =[]
 def doSVRegression(X_train,y_train,X_test,y_test):
     print('Now doing SVR cross validation')
     C_param_range = [0.001, 0.01, 0.1,1, 10, 25, 50, 100, 1000]
-    sv_kernels = ['rbf','linear','poly','sigmoid']
+    sv_kernels = ['rbf']
     for ker in sv_kernels:
         for i in C_param_range:
             rf = SVR(C = i,kernel = ker)
             #rf.score(X_train, y_train, sample_weight=None)
-            scores = cross_val_score(rf, X_train, y_train.ravel(), cv=5,scoring='neg_mean_squared_error')
+            scores = cross_val_score(rf, X_train, y_train.ravel(), cv=10,scoring='neg_mean_squared_error')
             print('scores --> ',scores)
             rf_mean_scores.append(scores.mean())
             #rf_std_scores.append(scores.std())

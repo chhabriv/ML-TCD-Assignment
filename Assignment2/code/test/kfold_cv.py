@@ -109,7 +109,7 @@ def doRFClassification(X_train,y_train,X_test,y_test):
     plt.ylabel('Cross-validated accuracy')
 
 def selectImportantFeatures(X_train,y_train):
-    tree_classifier = RandomForestClassifier(n_estimators=100,random_state=0)
+    tree_classifier = RandomForestClassifier(n_estimators=10,random_state=0)
     tree_classifier.fit(X_train,y_train)
     importances = tree_classifier.feature_importances_
     std = np.std([tree.feature_importances_ for tree in tree_classifier.estimators_],
@@ -137,8 +137,8 @@ def main():
     y = datasetEdit.iloc[:, -1].values
     
     #split categorical labeled data into columns
-    onehotencoder=OneHotEncoder(categorical_features= [0])
-    X=onehotencoder.fit_transform(X).toarray()
+    #onehotencoder=OneHotEncoder(categorical_features= [0])
+    #X=onehotencoder.fit_transform(X).toarray()
     
     #Split to train, validate, test   
     

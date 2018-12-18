@@ -1,18 +1,17 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Dec 17 19:34:17 2018
+Created on Tue Dec 18 02:55:18 2018
 
 @author: chakrabd
 """
 
-from sklearn.ensemble import  RandomForestRegressor
+from sklearn.linear_model import Lasso,RidgeCV
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.cross_validation import cross_val_score
 from sklearn.preprocessing import OneHotEncoder,LabelEncoder,StandardScaler
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing.imputation import Imputer
 
 def main():
     dataset = pd.read_csv('../../../../../googleplaystore_modified.csv')
@@ -38,28 +37,26 @@ def main():
     #dataset['Current Version'] = encode.fit_transform(dataset['Current Version'] )
     dataset['Android Ver'] = encode.fit_transform(dataset['Android Ver'] )
     
-    X = dataset.iloc[:, np.r_[1,3:8]].values
+    X = dataset.iloc[:, np.r_[1,3:7]].values
     y = dataset.iloc[:, np.r_[2]].values
 
-    #X=onehotencoder.fit_transform(X).toarray()
+    X=onehotencoder.fit_transform(X).toarray()
     X_train,X_test,y_train,y_test=train_test_split(X,y,test_size=0.1,random_state=19)
     scaler=StandardScaler()
     X_train=scaler.fit_transform(X_train)
     X_test=scaler.transform(X_test)
-    doRFRegression(X_train,y_train,X_test,y_test)
-    #selectImportantFeatures(dataset.columns,X_train,y_train)
-
+    doRidgeRegressionCV(X_train,y_train,X_test,y_test)
+    
 rf_mean_scores =[]
 rf_std_scores =[]
 
-def doRFRegression(X_train,y_train,X_test,y_test):
-    print('Now doing RF cross validation')
-    rf_range = range(10,110,10)
-    for i in rf_range:
-        rf = RandomForestRegressor(n_estimators = i, random_state = 19)
-        rf.fit(X_train,y_train.ravel())
+def doRidgeRegression(X_train,y_train,X_test,y_test):
+    print('Now doing SVR cross validation')
+    alpha_ridge = [0.001,0.01,0.1,1,10,100]
+    for i in alpha_ridge:
+        rf = Ridge(alpha=i)
         #rf.score(X_train, y_train, sample_weight=None)
-        scores = cross_val_score(rf, X_train, y_train.ravel(), cv=10,scoring='r2')
+        scores = -cross_val_score(rf, X_train, y_train.ravel(), cv=10,scoring='neg_mean_squared_error')
         print('scores --> ',scores)
         rf_mean_scores.append(scores.mean())
         #rf_std_scores.append(scores.std())
@@ -69,33 +66,44 @@ def doRFRegression(X_train,y_train,X_test,y_test):
     print('Length of list', len(rf_mean_scores))
     print('Max of list', max(rf_mean_scores))
 
-    plt.plot(rf_range, rf_mean_scores)
-    plt.xlabel('Value of n_estimator for RF')
+    plt.plot(alpha_ridge, rf_mean_scores)
+    plt.xlabel('Value of alpha for Ridge')
+    plt.ylabel('Cross-validated MSE')
+    
+
+def doRidgeRegressionCV(X_train,y_train,X_test,y_test):
+    print('Now doing Ridge cross validation')
+    alpha_ridge = [0.001,0.01,0.1,1,10,100, 500, 1000]
+    rf = RidgeCV(alphas=alpha_ridge,store_cv_values=True).fit(X_train,y_train)
+    print(rf.score(X_test,y_test))
+    cv_mse = np.mean(rf.cv_values_, axis=0)
+    print("alphas: %s" % alpha_ridge)
+    print("CV MSE: %s" % cv_mse)
+    print("Best alpha using built-in RidgeCV: %f" % rf.alpha_)
+    
+    plt.plot(np.array(alpha_ridge,dtype="float64"),np.array( cv_mse,dtype="float64")[0])
+    plt.xlabel('Value of alpha for Ridge')
     plt.ylabel('Cross-validated MSE')
 
-def selectImportantFeatures(keys,X_train,y_train):
-    tree_classifier = RandomForestRegressor(n_estimators=100,random_state=0)
-    tree_classifier.fit(X_train,y_train.ravel())
-    importances = tree_classifier.feature_importances_
-    std = np.std([tree.feature_importances_ for tree in tree_classifier.estimators_],
-             axis=0)
-    indices = importances.argsort()[::-1][:10] #top 10 features in descending order
-    print(indices)
-    print("Feature ranking:")
-    
-    for feat, importance in zip(keys, importances):
-        print ('feature: {f}, importance: {i}'.format(f=feat, i=importance))
+def doLassoRegression(X_train,y_train,X_test,y_test):
+    print('Now doing SVR cross validation')
+    alpha_lasso = [0.001,0.01,0.1,1,10]
+    for i in alpha_lasso:
+        rf = Lasso(alpha=i)
+        #rf.score(X_train, y_train, sample_weight=None)
+        scores = -cross_val_score(rf, X_train, y_train.ravel(), cv=10,scoring='neg_mean_squared_error')
+        print('scores --> ',scores)
+        rf_mean_scores.append(scores.mean())
+        #rf_std_scores.append(scores.std())
         
-    for f in range(indices.size):
-        print("%d. feature %d (%f)" % (f + 1, indices[f], importances[indices[f]]))
-    
-    plt.figure()
-    plt.title("Feature importances")
-    plt.bar(range(indices.size), importances[indices],
-           color="r",yerr=std[indices], align="center")
-    plt.xticks(range(indices.size), keys[indices])
-    plt.xlim([-1, indices.size])
-    plt.show()
+    print(rf_mean_scores)
+    #print(rf_std_scores)
+    print('Length of list', len(rf_mean_scores))
+    print('Max of list', max(rf_mean_scores))
+
+    plt.plot(alpha_lasso, rf_mean_scores)
+    plt.xlabel('Value of alpha for Ridge')
+    plt.ylabel('Cross-validated MSE')
     
 if __name__== "__main__":
     main()

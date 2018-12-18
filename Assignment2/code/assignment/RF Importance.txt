@@ -1,0 +1,35 @@
+library('csv')
+install.packages("dplyr")
+install.packages("ggplot2")
+library(dplyr)
+library(ggplot2)
+Data <- read.csv("googleplaystore.csv",sep=",", header=TRUE, as.is=TRUE)
+str(Data)
+
+newdata <-na.omit(Data)
+summary(newdata)
+str(newdata)
+attach(newdata)
+library(rpart)
+library(rpart.plot)
+library(partykit)
+
+cols <- c(1,6,8:9)
+newdata[cols] <- lapply(newdata[cols], factor)
+
+cols1 <- c(4)
+newdata[cols1] <- lapply(newdata[cols1], as.numeric)
+
+newdata <-na.omit(newdata)
+
+DT_Model=rpart(Rating~.,data=Data,control=rpart.control(minsplit = 60, minbucket = 30,maxdepth = 4))
+plot(as.party(DT_Model))
+
+
+#RandomForest
+library(randomForest)
+RF=randomForest(Rating~.,data=newdata) 
+print(RF)
+importance(RF,colors(red)
+varImpPlot(RF)
+plot(RF)

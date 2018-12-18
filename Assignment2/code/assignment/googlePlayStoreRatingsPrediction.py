@@ -91,13 +91,13 @@ for prune in range(0,21):
 
     scaler=StandardScaler()
     datasetEdit2[['Reviews','Size','Installs','Price']]=scaler.fit_transform(datasetEdit2[['Reviews','Size','Installs','Price']])
-    datasetEdit2.to_csv("Scaled Dataset")
+    #datasetEdit2.to_csv("Scaled Dataset")
 
     y=datasetEdit2['Rating']
-    X=datasetEdit2.drop(['Rating','App','Genres'],axis=1)
+    X=datasetEdit2.drop(['Rating','App','Genres','Content Rating','Price','Type'],axis=1)
     
     #split categorical labeled data into columns
-    onehotencoder=OneHotEncoder(categorical_features=[0,4,6,7])
+    onehotencoder=OneHotEncoder(categorical_features=[0,4])#6,7])
     X=onehotencoder.fit_transform(X).toarray()
     
 
@@ -180,7 +180,7 @@ for prune in range(0,21):
     results=results.append(pd.Series(resultList,index=finalColumns),ignore_index=True)
     
 results
-results.to_csv("Accuracy0.csv")
+results.to_csv("AccuracyNew.csv")
 print(results)
 postPruneCount=datasetEdit.shape[0]
 totalRecordsPruned=(prePruneCount-postPruneCount)

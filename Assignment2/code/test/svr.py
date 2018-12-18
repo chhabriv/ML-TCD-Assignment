@@ -15,7 +15,7 @@ from sklearn.preprocessing import OneHotEncoder,LabelEncoder,StandardScaler
 from sklearn.model_selection import train_test_split
 
 def main():
-    dataset = pd.read_csv('../../../../../googleplaystore_modified.csv')
+    dataset = pd.read_csv('googleplaystore_modified.csv')
     dataset.info()
     dataset.drop_duplicates(subset=None, keep='first',inplace=True)
     dataset.isna().sum()

@@ -10,12 +10,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns 
-from sklearn import metrics
 from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import StandardScaler
 from sklearn.cross_validation import cross_val_score, cross_val_predict
 from sklearn.model_selection import cross_validate
-from sklearn import metrics
+from sklearn.metrics import mean_squared_error,r2_score
 from math import sqrt
 
 # Importing the dataset
@@ -67,9 +66,10 @@ plt.figure(figsize=(18,8),dpi=100,)
 plt.subplots(figsize=(18,8))
 sns.heatmap(data=datasetEdit.corr(),square=True,vmax=0.8,annot=True)
 
-finalColumns=["Pruned %","Random Forest MSE","Random Forest MAE","Random Forest RMSE","Random Forest R2",
-                              "Linear MSE","Linear MAE","Linear RMSE","Linear R2"]#,
-                              #"SVR MSE","SVR MAE","SVR RMSE","SVR R2"]
+
+finalColumns=["Pruned %","Random Forest MSE","Random Forest RMSE","Random Forest R2","Random Forest OOS MSE","Random Forest OOS RMSE","Random Forest OOS R2",
+                              "Linear MSE","Linear RMSE","Linear R2","Linear OOS MSE","Linear OOS RMSE","Linear OOS R2",
+                              "SVR MSE","SVR RMSE","SVR R2","SVR OOS MSE","SVR OOS RMSE","SVR OOS R2"]
 
 results=pd.DataFrame(columns=finalColumns) #Dataframe for each result
 
@@ -77,27 +77,26 @@ prePruneCount=datasetEdit.shape[0]
 print('Dataset size before pruning: ',prePruneCount)
 
  #Standardize the features
-scaler=StandardScaler()
-datasetEdit[['Reviews','Size','Installs','Price']]=scaler.fit_transform(datasetEdit[['Reviews','Size','Installs','Price']])
+
 
 #incrementally prune
 for prune in range(1,21):
     
     resultList=[]
     #Pruning based on review count < 20
-    datasetEdit=datasetEdit.drop(datasetEdit[(datasetEdit['Reviews']<prune)].index).reset_index(drop=True)
-    prunedCount=datasetEdit.shape[0]
-    resultList.append(round(prunedCount/prePruneCount,2))
-    #datasetEdit.info()
-    
-    #Setting predictors and target variables
-    #y=datasetEdit2['Rating']
-    #X=datasetEdit2.drop(['Rating','App','Genres'],axis=1)
-    X = datasetEdit.iloc[:, np.r_[1,3:11]].values
-    y = datasetEdit.iloc[:, 2].values
+    datasetEdit2=datasetEdit.drop(datasetEdit[(datasetEdit['Reviews']<prune)].index).reset_index(drop=True)
+
+    prunedCount=datasetEdit2.shape[0]
+    resultList.append(round(((prePruneCount-prunedCount)/prePruneCount)*100,2))
+
+    scaler=StandardScaler()
+    datasetEdit2[['Reviews','Size','Installs','Price']]=scaler.fit_transform(datasetEdit2[['Reviews','Size','Installs','Price']])
+
+    y=datasetEdit2['Rating']
+    X=datasetEdit2.drop(['Rating','App','Genres'],axis=1)
     
     #split categorical labeled data into columns
-    onehotencoder=OneHotEncoder(categorical_features= [0,4,6,7])
+    onehotencoder=OneHotEncoder(categorical_features=[0,4,6,7])
     X=onehotencoder.fit_transform(X).toarray()
     
 
@@ -141,24 +140,45 @@ for prune in range(1,21):
     regressor.fit(X_train,y_train)
     scores = cross_validate(regressor, X_train, y_train, cv=10, scoring=scoring)
     resultList.append(round(-scores['test_neg_mean_squared_error'].mean(),2))
-    resultList.append(round(-scores['test_neg_mean_absolute_error'].mean(),2))
+    #resultList.append(round(-scores['test_neg_mean_absolute_error'].mean(),2))
     resultList.append(round(sqrt(-scores['test_neg_mean_squared_error'].mean()),2))
-    resultList.append(round(-scores['test_r2'].mean(),2))
+    resultList.append(round(scores['test_r2'].mean(),2))
+    y_pred=regressor.predict(X_test)
+    resultList.append(round(mean_squared_error(y_test, y_pred),2))
+    resultList.append(round(sqrt(mean_squared_error(y_test, y_pred)),2))
+    resultList.append(round(r2_score(y_test, y_pred),2))
+    
     
     from sklearn.linear_model import LinearRegression,Ridge
     regressor= Ridge(alpha=1)
     regressor.fit(X_train,y_train)
     scores = cross_validate(regressor, X_train, y_train, cv=10, scoring=scoring)
     resultList.append(round(-scores['test_neg_mean_squared_error'].mean(),2))
-    resultList.append(round(-scores['test_neg_mean_absolute_error'].mean(),2))
+    #resultList.append(round(-scores['test_neg_mean_absolute_error'].mean(),2))
     resultList.append(round(sqrt(-scores['test_neg_mean_squared_error'].mean()),2))
-    resultList.append(round(-scores['test_r2'].mean(),2))
+    resultList.append(round(scores['test_r2'].mean(),2))
+    y_pred=regressor.predict(X_test)
+    resultList.append(round(mean_squared_error(y_test, y_pred),2))
+    resultList.append(round(sqrt(mean_squared_error(y_test, y_pred)),2))
+    resultList.append(round(r2_score(y_test, y_pred),2))
     
+    from sklearn.svm import SVR
+    regressor = SVR(C = 1)
+    regressor.fit(X_train,y_train)
+    scores = cross_validate(regressor, X_train, y_train, cv=10, scoring=scoring)
+    resultList.append(round(-scores['test_neg_mean_squared_error'].mean(),2))
+    #resultList.append(round(-scores['test_neg_mean_absolute_error'].mean(),2))
+    resultList.append(round(sqrt(-scores['test_neg_mean_squared_error'].mean()),2))
+    resultList.append(round(scores['test_r2'].mean(),2))
+    y_pred=regressor.predict(X_test)
+    resultList.append(round(mean_squared_error(y_test, y_pred),2))
+    resultList.append(round(sqrt(mean_squared_error(y_test, y_pred)),2))
+    resultList.append(round(r2_score(y_test, y_pred),2))
 
-    #results=results.append(pd.Series(resultList,index=["Random Forest Train","Random Forest Validate","Random Forest Test","Logistic Train","Logistic Validate","Logistic Test","SVC Train","SVC Validate","SVC Test"]),ignore_index=True)
+    
     results=results.append(pd.Series(resultList,index=finalColumns),ignore_index=True)
     
-resultList
+results
 results.to_csv("Accuracy.csv")
 print(results)
 postPruneCount=datasetEdit.shape[0]

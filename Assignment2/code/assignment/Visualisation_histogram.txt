@@ -1,0 +1,39 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sat Oct 27 17:39:33 2018
+
+@author: barmanra
+"""
+
+import numpy as np # linear algebra
+import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
+import os
+import matplotlib.pyplot as plt 
+import seaborn as sns 
+from scipy import stats
+from sklearn.linear_model.logistic import _logistic_loss
+
+print(os.listdir("//tholospg.itserv.scss.tcd.ie/Pgrad/barmanra/My Documents/ml_play/PHASE2"))
+
+data=pd.read_csv(r"//tholospg.itserv.scss.tcd.ie/Pgrad/barmanra/My Documents/ml_play/PHASE2/googleplaystore.csv")
+data.info()
+data.head()
+data.isna().sum()
+
+# Any results you write to the current directory are saved as output.
+
+#histogram of imdb score
+
+plt.figure(figsize=(15,5))
+plt.title("Histogram Of Google Play App Ratings",color="black",size=18)
+plt.xlabel("User Ratings",color="red",size=16)
+plt.ylabel('Frequency',color="red",size=16)
+data['Rating'].hist()
+plt.xticks(np.arange(0.5,5.5,0.5))
+
+
+#plotting Heat Map
+
+plt.figure(figsize=(18,8),dpi=100,)
+plt.subplots(figsize=(18,8))
+sns.heatmap(data=data.corr(),square=True,vmax=0.8,annot=True)

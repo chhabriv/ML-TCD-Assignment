@@ -80,7 +80,7 @@ print('Dataset size before pruning: ',prePruneCount)
 
 
 #incrementally prune
-for prune in range(1,21):
+for prune in range(0,21):
     
     resultList=[]
     #Pruning based on review count < 20
@@ -91,6 +91,7 @@ for prune in range(1,21):
 
     scaler=StandardScaler()
     datasetEdit2[['Reviews','Size','Installs','Price']]=scaler.fit_transform(datasetEdit2[['Reviews','Size','Installs','Price']])
+    datasetEdit2.to_csv("Scaled Dataset")
 
     y=datasetEdit2['Rating']
     X=datasetEdit2.drop(['Rating','App','Genres'],axis=1)
@@ -136,7 +137,7 @@ for prune in range(1,21):
     scoring = ['neg_mean_absolute_error','neg_mean_squared_error','r2']
     
     from sklearn.ensemble import RandomForestRegressor
-    regressor = RandomForestRegressor(n_estimators = 40, random_state = 19)
+    regressor = RandomForestRegressor(n_estimators = 100, random_state = 19)
     regressor.fit(X_train,y_train)
     scores = cross_validate(regressor, X_train, y_train, cv=10, scoring=scoring)
     resultList.append(round(-scores['test_neg_mean_squared_error'].mean(),2))
@@ -179,7 +180,7 @@ for prune in range(1,21):
     results=results.append(pd.Series(resultList,index=finalColumns),ignore_index=True)
     
 results
-results.to_csv("Accuracy.csv")
+results.to_csv("Accuracy0.csv")
 print(results)
 postPruneCount=datasetEdit.shape[0]
 totalRecordsPruned=(prePruneCount-postPruneCount)

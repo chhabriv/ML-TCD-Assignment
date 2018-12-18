@@ -1,0 +1,2 @@
+,Pruned %,Random Forest MSE,Random Forest RMSE,Random Forest R2,Random Forest OOS MSE,Random Forest OOS RMSE,Random Forest OOS R2,Linear MSE,Linear RMSE,Linear R2,Linear OOS MSE,Linear OOS RMSE,Linear OOS R2,SVR MSE,SVR RMSE,SVR R2,SVR OOS MSE,SVR OOS RMSE,SVR OOS R2
+0,10.47,0.16,0.4,0.21,0.15,0.39,0.22,0.18,0.42,0.13,0.17,0.41,0.13,0.18,0.43,0.12,0.17,0.42,0.12
